@@ -1,0 +1,20 @@
+name: Build IPA
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          unzip -q NovaEditor-iOS-project.zip
+          cd NovaEditor-iOS
+          brew install xcodegen
+          xcodegen generate
+          xcodebuild -project NovaEditor.xcodeproj -scheme NovaEditor -configuration Release -sdk iphoneos -archivePath build/App.xcarchive archive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+          mkdir -p build/Payload
+          cp -r build/App.xcarchive/Products/Applications/NovaEditor.app build/Payload/
+          cd build && zip -qr NovaEditor-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipa
+          path: NovaEditor-iOS/build/NovaEditor-unsigned.ipa
